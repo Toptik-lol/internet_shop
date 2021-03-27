@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data import db_session
 from data.users import User
 
+
 from forms.user import RegisterForm, LoginForm
 
 
@@ -26,12 +27,13 @@ def load_user(user_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    return render_template('base.html', title='Добавление работы')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    return render_template('base.html', title='Добавление работы')
+    form = RegisterForm()
+    return render_template('register.html', title='Добавление работы', form=form)
 
 
 if __name__ == '__main__':

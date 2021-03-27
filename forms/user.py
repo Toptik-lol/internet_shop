@@ -12,11 +12,11 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-    surname = StringField('Surname', validators=[DataRequired()])
-    name = StringField('Name', validators=[DataRequired()])
-    email = EmailField('Login/email', validators=[DataRequired()])
-    phone = StringField('Phone', validators=[DataRequired()])
-    address = StringField('Address', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    password_again = PasswordField('Repeat password', validators=[DataRequired()])
-    submit = SubmitField('Submit')
+    surname = StringField('Фамилия', validators=[DataRequired()])
+    name = StringField('Имя', validators=[DataRequired()])
+    email = EmailField('Логин/почта', validators=[DataRequired()])
+    phone = StringField('Телефон', validators=[DataRequired()])
+    address = StringField('Адрес', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
+    submit = SubmitField('Зарегистрироваться')
