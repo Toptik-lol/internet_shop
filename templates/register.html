@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="text-left">Форма регистрации</h1>
+<h1 class="text-left">Данные пользователя</h1>
 <form action="" method="post">
     {{ form.hidden_tag() }}
     <p>
@@ -73,8 +73,16 @@
            </p>
        {% endfor %}
     </p>
+    {% if current_user.is_admin %}
+        <p>
+            {{ form.is_admin() }} {{ form.is_admin.label }}
+        </p>
+    {% endif %}
 
-    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    <p>
+        {{ form.submit(type="submit", class="btn btn-primary") }}
+        <a class="btn btn-primary " href="/">Отмена</a>
+    </p>
     {{message}}
 </form>
 

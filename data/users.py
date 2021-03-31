@@ -18,6 +18,7 @@ class User(SqlAlchemyBase, UserMixin):
     phone = sqlalchemy.Column(sqlalchemy.String, unique=True)
     address = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     date_registration = sqlalchemy.Column(sqlalchemy.Date, default=datetime.now)
+    is_admin = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     def set_password(self, password):

@@ -1,12 +1,13 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from werkzeug.exceptions import abort
 from werkzeug.utils import redirect
 
 from data import db_session
 from data.users import User
 
 
-from forms.user import RegisterForm, LoginForm
+from forms.user import RegisterForm, LoginForm, EditRegisterForm
 
 
 app = Flask(__name__)
@@ -18,6 +19,13 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 def main():
     db_session.global_init("db/shop.db")
     app.run()
+
+
+@app.route("/")
+def index():
+    # db_sess = db_session.create_session()
+    # jobs = db_sess.query(Jobs)
+    return render_template("index.html", title='Lemon Shop')
 
 
 @app.route('/logout')
@@ -70,6 +78,49 @@ def register():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/users/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    form = EditRegisterForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == id).first()
+
+        if user:
+            form.surname.data = user.surname
+            form.name.data = user.name
+            form.email.data = user.email
+            form.phone.data = user.phone
+            form.address.data = user.address
+            form.is_admin.data = user.is_admin
+        else:
+            abort(404)
+
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == id).first()
+
+        if user and (current_user.id == user.id or current_user.is_admin):
+            user.surname = form.surname.data
+            user.name = form.name.data
+            user.email = form.email.data
+            user.phone = form.phone.data
+            user.address = form.address.data
+            if form.password.data:
+                if form.password.data != form.password_again.data:
+                    return render_template("register.html", form=form, message="Пароли не совпадают")
+                else:
+                    user.set_password(form.password.data)
+            if current_user.is_admin:
+                user.is_admin = form.is_admin.data
+
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('register.html', title='Редактирование данных пользователя', form=form)
 
 
 if __name__ == '__main__':

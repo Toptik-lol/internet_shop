@@ -16,7 +16,7 @@
         <p><img src="/static/img/telephone.png" width="32" height="32" class="d-inline-block align-top" alt="" loading="lazy">  тел. +7 (888) 888-88-88</p>
         {% if current_user.is_authenticated %}
             <a class="navbar-brand" href="/logout">Выйти</a>
-            <p>{{ current_user.name }}</p>
+            <a class="navbar-brand" href="/users/{{current_user.id}}">{{ current_user.name }}</a>
         {% else %}
         <p>
             <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
