@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-center">Пользователи</h1>
+<table class="table table-striped">
+    <thead class="table-active">
+        <tr>
+          <th>Id</th>
+          <th>Фамилия</th>
+          <th>Имя</th>
+          <th>Почта</th>
+          <th>Телефон</th>
+          <th>Адрес</th>
+          <th>Дата регистрации</th>
+          <th>Права админа</th>
+        </tr>
+    </thead>
+    {% for item in user_list%}
+    <tbody class="table-info">
+        <tr>
+          <td>{{item.id}}</td>
+          <td>{{item.surname}}</td>
+          <td>{{item.name}}</td>
+          <td>{{item.email}}</td>
+          <td>{{item.phone}}</td>
+          <td>{{item.address}}</td>
+          <td>{{item.date_registration}}</td>
+          <td class="table-danger">{{item.is_admin}}</td>
+        </tr>
+        <tr>
+            <td colspan="8">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="/users/{{ item.id }}" class="btn btn-warning">
+                            Редактировать
+                        </a>
+                        <a href="/user_delete/{{ item.id }}" class="btn btn-danger">
+                            Удалить
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -123,5 +123,30 @@ def edit_user(id):
     return render_template('register.html', title='Редактирование данных пользователя', form=form)
 
 
+@app.route('/users')
+@login_required
+def users_list():
+    if current_user.is_admin:
+        db_sess = db_session.create_session()
+        user_list = db_sess.query(User)
+        return render_template("users.html", user_list=user_list)
+    else:
+        abort(404)
+        return redirect('/')
+
+
+@app.route('/user_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def user_delete(id):
+    if current_user.is_admin:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == id).first()
+        db_sess.delete(user)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
 if __name__ == '__main__':
     main()
