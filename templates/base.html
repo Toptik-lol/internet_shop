@@ -18,6 +18,7 @@
             <a class="navbar-brand" href="/users/{{current_user.id}}">{{ current_user.name }}</a>
             {% if current_user.is_admin %}
                 <a class="navbar-brand" href="/users">Список пользователей</a>
+                <a class="navbar-brand" href="/products">Добавление товара</a>
             {% endif %}
             <a class="navbar-brand" href="/logout">Выйти</a>
         {% else %}

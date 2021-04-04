@@ -5,9 +5,14 @@ from werkzeug.utils import redirect
 
 from data import db_session
 from data.users import User
+from data.products import Product
+
+from datetime import datetime
+from os import path
 
 
 from forms.user import RegisterForm, LoginForm, EditRegisterForm
+from forms.product import ProductForm
 
 
 app = Flask(__name__)
@@ -146,6 +151,33 @@ def user_delete(id):
     else:
         abort(404)
     return redirect('/')
+
+
+@app.route('/products', methods=['GET', 'POST'])
+@login_required
+def add_product():
+    form = ProductForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        product = Product(title=form.title .data, description=form.description.data,
+                          producer=form.producer.data, price=float(form.price.data), count=int(form.count.data),
+                          advantage=form.advantage.data)
+        if form.picture.data != '':
+            f = form.picture.data
+            parent_dir = path.dirname(path.abspath(__file__))
+            basename = parent_dir + '\\static\\pictures\\pic'
+            suffix = datetime.now().strftime("%y%m%d_%H%M%S")
+            filename = "_".join([basename, suffix, '.png'])
+            g = open(filename, 'wb')
+            g.write(f.getbuffer())
+            g.close()
+            product.picture = filename
+            print(form.picture.data)
+
+        db_sess.add(product)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('product.html', title='Добавление товара', form=form)
 
 
 if __name__ == '__main__':
