@@ -1,5 +1,57 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>В разработке</h1>
+<h1>Товары</h1>
+<div class="btn-group">
+  <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Категория товара
+  </button>
+  <div class="dropdown-menu">
+    <a class="dropdown-item" href="/">Все категории</a>
+    {% for item in categories%}
+        <a class="dropdown-item" href="/{{item.id}}">{{ item.title }}</a>
+    {% endfor %}
+  </div>
+</div>
+<table class="table table-bordered">
+    <thead class="table-active">
+        <tr>
+            <th scope="col" colspan="2" class="w-25">Внешний вид</th>
+            <th scope="col" colspan="6" class="w-75">Описание товара</th>
+        </tr>
+    </thead>
+    {% for item in products%}
+    <tbody>
+        <tr>
+            <td colspan="2"><img src={{item.picture}} width="300" height="300"></td>
+            <td colspan="6">
+                <h6 class="list-group-item-heading">Название товара:</h6>
+                <p class="list-group-item-text">{{item.title}}</p>
+                <h6 class="list-group-item-heading">Описание товара:</h6>
+                <p class="list-group-item-text">{{item.description}}</p>
+                <h6 class="list-group-item-heading">Производитель:</h6>
+                <p class="list-group-item-text">{{item.producer}}</p>
+                <h6 class="list-group-item-heading">Цена:</h6>
+                <p class="list-group-item-text">{{item.price}}</p>
+                <h6 class="list-group-item-heading">Количество:</h6>
+                <p class="list-group-item-text">{{item.count}}</p>
+                <h6 class="list-group-item-heading">Преимущества покупки товара:</h6>
+                <p class="list-group-item-text">{{item.advantage}}</p>
+                <a href="/add_to_basket/{{current_user.id}}/{{ item.id }}" class="btn btn-success">Добавить в корзину</a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="/edit_product/{{ item.id }}" class="btn btn-warning">
+                            Редактировать
+                        </a>
+                        <a href="/delete_product/{{ item.id }}" class="btn btn-danger">
+                            Удалить
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+    {% endfor %}
+</table>
+
 {% endblock %}

@@ -7,18 +7,47 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <script>
+    function getName (str){
+        if (str.lastIndexOf('\\')){
+            var i = str.lastIndexOf('\\')+1;
+        }
+        else{
+            var i = str.lastIndexOf('/')+1;
+        }
+        var filename = str.slice(i);
+        var uploaded = document.getElementById("fileformlabel");
+        uploaded.innerHTML = filename;
+    }
+    </script>
     <title>{{title}}</title>
 </head>
 <body>
 <header>
     <nav class="navbar navbar-dark bg-dark text-white">
         <a class="navbar-brand" href="/"><img src="/static/img/lemon.png" width="32" height="32" class="d-inline-block align-top" alt="" loading="lazy">Lemon Shop</a>
-        <p><img src="/static/img/telephone.png" width="32" height="32" class="d-inline-block align-top" alt="" loading="lazy">  тел. +7 (888) 888-88-88</p>
+        <p class="d-inline-block align-centre"><img src="/static/img/telephone.png" width="32" height="32" class="d-inline-block" alt="" loading="lazy">  тел. +7 (888) 888-88-88</p>
+        <a class="navbar-brand" href="/">Каталог товаров</a>
         {% if current_user.is_authenticated %}
             <a class="navbar-brand" href="/users/{{current_user.id}}">{{ current_user.name }}</a>
             {% if current_user.is_admin %}
-                <a class="navbar-brand" href="/users">Список пользователей</a>
-                <a class="navbar-brand" href="/products">Добавление товара</a>
+
+                <div class="btn-group">
+                  <button type="button" class="btn dropdown-toggle text-white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Меню администратора
+                  </button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/users">Список пользователей</a>
+                    <a class="dropdown-item" href="/products">Добавление товара</a>
+                    <a class="dropdown-item" href="/category">Категории</a>
+                    <a class="dropdown-item" href="/add_category">Добавление категории</a>
+                  </div>
+                </div>
+
             {% endif %}
             <a class="navbar-brand" href="/logout">Выйти</a>
         {% else %}

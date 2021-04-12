@@ -2,6 +2,20 @@
 
 {% block content %}
 <h1>Добавление товара</h1>
+<script>
+    function getName (str){
+        if (str.lastIndexOf('\\')){
+            var i = str.lastIndexOf('\\')+1;
+        }
+        else{
+            var i = str.lastIndexOf('/')+1;
+        }
+        var filename = str.slice(i);
+        var uploaded = document.getElementById("fileformlabel");
+        uploaded.innerHTML = filename;
+    }
+    </script>
+
 <form action="" method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <p>
@@ -15,7 +29,10 @@
     </p>
     <p>
         {{ form.picture.label }}<br>
-        {{ form.picture(class="filestyle") }}<br>
+        <div class="fileform">
+            <div class="selectbutton">Обзор</div>
+            <input id="upload" type="file" name="picture" onchange="getName(this.value);"/>
+        </div>
     </p>
     <p>
         {{ form.description.label }}<br>
@@ -25,6 +42,25 @@
                 {{ error }}
             </p>
         {% endfor %}
+    </p>
+    <p>
+        {% if category == None %}
+            {{ form.category.label }}<br>
+            <select name='category' class="form-control form-select">
+                <option selected>{{categories[0].title}}</option>
+                {% for cat in categories %}
+                    <option value={{cat.id}}>{{cat.title}}</option>
+                {% endfor %}
+            </select>
+        {% else %}
+            {{ form.category.label }}<br>
+            <select name='category' class="form-control form-select">
+                <option selected>{{category}}</option>
+                {% for cat in categories %}
+                    <option value={{cat.id}}>{{cat.title}}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
     </p>
     <p>
         {{ form.producer.label }}<br>
@@ -59,5 +95,7 @@
     </p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
+
 </form>
+
 {% endblock %}

@@ -6,6 +6,7 @@ from werkzeug.utils import redirect
 from data import db_session
 from data.users import User
 from data.products import Product
+from data.categorys import Category
 
 from datetime import datetime
 from os import path
@@ -13,6 +14,7 @@ from os import path
 
 from forms.user import RegisterForm, LoginForm, EditRegisterForm
 from forms.product import ProductForm
+from forms.add_category import AddCategoryForm
 
 
 app = Flask(__name__)
@@ -28,9 +30,18 @@ def main():
 
 @app.route("/")
 def index():
-    # db_sess = db_session.create_session()
-    # jobs = db_sess.query(Jobs)
-    return render_template("index.html", title='Lemon Shop')
+    db_sess = db_session.create_session()
+    products = db_sess.query(Product)
+    categories = db_sess.query(Category)
+    return render_template("index.html", title='Lemon Shop', products=products, categories=categories)
+
+
+@app.route("/<int:id>")
+def index_id(id):
+    db_sess = db_session.create_session()
+    products = db_sess.query(Product).filter(Product.category == id).all()
+    categories = db_sess.query(Category)
+    return render_template("index.html", title='Lemon Shop', products=products, categories=categories)
 
 
 @app.route('/logout')
@@ -157,9 +168,10 @@ def user_delete(id):
 @login_required
 def add_product():
     form = ProductForm()
+    db_sess = db_session.create_session()
+    categories = db_sess.query(Category)
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        product = Product(title=form.title .data, description=form.description.data,
+        product = Product(title=form.title.data, description=form.description.data,
                           producer=form.producer.data, price=float(form.price.data), count=int(form.count.data),
                           advantage=form.advantage.data)
         if form.picture.data != '':
@@ -171,13 +183,155 @@ def add_product():
             g = open(filename, 'wb')
             g.write(f.getbuffer())
             g.close()
-            product.picture = filename
+            product.picture = '/static/pictures/pic_' + suffix + '_.png'
             print(form.picture.data)
+
+        product.category = form.category.data
 
         db_sess.add(product)
         db_sess.commit()
         return redirect('/')
-    return render_template('product.html', title='Добавление товара', form=form)
+    return render_template('product.html', title='Добавление товара', form=form, categories=categories, category=None)
+
+
+@app.route('/add_to_basket/<int:user_id>/<int:product_id>')
+@login_required
+def add_to_basket(user_id, product_id):
+    pass
+
+
+@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_product(id):
+    form = ProductForm()
+    db_sess = db_session.create_session()
+    categories = db_sess.query(Category)
+    if request.method == "GET":
+        product = db_sess.query(Product).filter(Product.id == id).first()
+
+        if product:
+            form.title.data = product.title
+
+            parent_dir = path.dirname(path.abspath(__file__))
+            basename = parent_dir + product.picture
+            f = open(basename, 'rb')
+            data = f.read()
+            form.picture.data = f
+            print(form.picture.data)
+
+            form.description.data = product.description
+            category = db_sess.query(Category).filter(Category.id == product.category).first()
+            form.category.data = product.category
+            form.producer.data = product.producer
+            form.price.data = product.price
+            form.count.data = product.count
+            form.advantage.data = product.advantage
+            f.close()
+        else:
+            abort(404)
+
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        product = db_sess.query(Product).filter(Product.id == id).first()
+
+        if product and current_user.is_admin:
+            product.title = form.title.data
+            # product.picture = form.picture.data
+            product.description = form.description.data
+            product.category = form.category.data
+            product.producer = form.producer.data
+            product.price = float(form.price.data)
+            product.count = int(form.count.data)
+            product.advantage = form.advantage.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+
+    return render_template('product.html', title='Редоктирование товара', form=form, categories=categories, category=category.title)
+
+
+@app.route('/delete_product/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_product(id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Product).filter(Product.id == id).first()
+    if product and current_user.is_admin:
+        db_sess.delete(product)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
+@app.route('/category')
+@login_required
+def categories_list():
+    if current_user.is_admin:
+        db_sess = db_session.create_session()
+        category_list = db_sess.query(Category)
+        return render_template("category.html", category_list=category_list)
+    else:
+        abort(404)
+        return redirect('/')
+
+
+@app.route('/add_category', methods=['GET', 'POST'])
+@login_required
+def add_category():
+    if current_user.is_admin:
+        form = AddCategoryForm()
+        if form.validate_on_submit():
+            db_sess = db_session.create_session()
+            category = Category(title=form.title .data, description=form.description.data)
+            db_sess.add(category)
+            db_sess.commit()
+            return redirect('/')
+        return render_template('add_category.html', title='Создание категории', form=form)
+    else:
+        abort(404)
+        return redirect('/')
+
+
+@app.route('/category_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def category_delete(id):
+    if current_user.is_admin:
+        db_sess = db_session.create_session()
+        category = db_sess.query(Category).filter(Category.id == id).first()
+        db_sess.delete(category)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
+@app.route('/category/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    form = AddCategoryForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        category = db_sess.query(Category).filter(Category.id == id).first()
+
+        if category:
+            form.title.data = category.title
+            form.description.data = category.description
+        else:
+            abort(404)
+
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        category = db_sess.query(Category).filter(Category.id == id).first()
+
+        if category and current_user.is_admin:
+            category.title = form.title.data
+            category.description = form.description.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('add_category.html', title='Редактирование категории', form=form)
 
 
 if __name__ == '__main__':

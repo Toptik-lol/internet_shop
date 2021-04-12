@@ -11,10 +11,8 @@ class Product(SqlAlchemyBase, UserMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     title = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    picture = sqlalchemy.Column(sqlalchemy.String, default='../static/picture/product_default.png')
-    # picture = sqlalchemy.Column(StdImageField(storage=S3Storage(),
-    #                                           variations={'thumbnail': {"width": 360, "height": 360, "crop": True}}),
-    #                             nullable=True)
+    picture = sqlalchemy.Column(sqlalchemy.String, default='/static/pictures/product_default.png')
+    category = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("categorys.id"), default=1)
     description = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     producer = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     price = sqlalchemy.Column(sqlalchemy.Float, nullable=False)
