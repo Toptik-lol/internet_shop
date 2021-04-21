@@ -7,6 +7,7 @@ from data import db_session
 from data.users import User
 from data.products import Product
 from data.categorys import Category
+from data.baskets import Basket
 
 from datetime import datetime
 from os import path
@@ -33,7 +34,7 @@ def index():
     db_sess = db_session.create_session()
     products = db_sess.query(Product)
     categories = db_sess.query(Category)
-    return render_template("index.html", title='Lemon Shop', products=products, categories=categories)
+    return render_template("index.html", title='Lemon Shop', products=products, categories=categories, null=-1)
 
 
 @app.route("/<int:id>")
@@ -41,7 +42,7 @@ def index_id(id):
     db_sess = db_session.create_session()
     products = db_sess.query(Product).filter(Product.category == id).all()
     categories = db_sess.query(Category)
-    return render_template("index.html", title='Lemon Shop', products=products, categories=categories)
+    return render_template("index.html", title='Lemon Shop', products=products, categories=categories, null=-1)
 
 
 @app.route('/logout')
@@ -170,11 +171,12 @@ def add_product():
     form = ProductForm()
     db_sess = db_session.create_session()
     categories = db_sess.query(Category)
+    category_flag = 'None'
     if form.validate_on_submit():
         product = Product(title=form.title.data, description=form.description.data,
                           producer=form.producer.data, price=float(form.price.data), count=int(form.count.data),
                           advantage=form.advantage.data)
-        if form.picture.data != '':
+        if form.picture.data:
             f = form.picture.data
             parent_dir = path.dirname(path.abspath(__file__))
             basename = parent_dir + '\\static\\pictures\\pic'
@@ -184,20 +186,85 @@ def add_product():
             g.write(f.getbuffer())
             g.close()
             product.picture = '/static/pictures/pic_' + suffix + '_.png'
-            print(form.picture.data)
 
-        product.category = form.category.data
+        cat = db_sess.query(Category).filter(Category.title == form.category.data).first()
+        product.category = cat.id
 
         db_sess.add(product)
         db_sess.commit()
         return redirect('/')
-    return render_template('product.html', title='Добавление товара', form=form, categories=categories, category=None)
+    return render_template('product.html', title='Добавление товара', form=form, categories=categories, category=category_flag)
 
 
 @app.route('/add_to_basket/<int:user_id>/<int:product_id>')
 @login_required
 def add_to_basket(user_id, product_id):
-    pass
+    db_sess = db_session.create_session()
+    products = db_sess.query(Product)
+    categories = db_sess.query(Category)
+    product = db_sess.query(Product).filter(Product.id == product_id).first()
+    if product.count > 0:
+        product.count -= 1
+        basket = db_sess.query(Basket).filter(Basket.user_id == user_id).first()
+        if basket:
+            basket.add_product(product_id)
+        else:
+            new_basket = Basket(user_id=user_id, products_list=str(product_id))
+            db_sess.add(new_basket)
+        db_sess.commit()
+        # redirect('/')
+    else:
+        return render_template("index.html", title='Lemon Shop', products=products, categories=categories,
+                               null=product_id)
+    return redirect('/')
+
+
+@app.route('/basket/<int:id>')
+@login_required
+def basket(id):
+    db_sess = db_session.create_session()
+    basket_user = db_sess.query(Basket).filter(Basket.user_id == id).first()
+    products_list = []
+    if basket_user:
+        products_id = basket_user.product_to_list()
+        if len(basket_user.products_list) > 0:
+            for i in products_id:
+                products_list.append(db_sess.query(Product).filter(Product.id == int(i)).first())
+    return render_template("basket.html", title='Корзина', products_list=products_list, user_id=id)
+
+
+@app.route('/buy_product/<int:user_id>/<int:product_id>')
+@login_required
+def buy_product(user_id, product_id):
+    db_sess = db_session.create_session()
+    basket_user = db_sess.query(Basket).filter(Basket.user_id == user_id).first()
+    basket_user.del_product(str(product_id))
+    db_sess.commit()
+    return basket(user_id)
+
+
+@app.route('/cancel_product/<int:user_id>/<int:product_id>')
+@login_required
+def cancel_product(user_id, product_id):
+    db_sess = db_session.create_session()
+    basket_user = db_sess.query(Basket).filter(Basket.user_id == user_id).first()
+    basket_user.del_product(str(product_id))
+    product = db_sess.query(Product).filter(Product.id == product_id).first()
+    product.count += 1
+    db_sess.commit()
+    return basket(user_id)
+
+
+@app.route('/buy_all/<int:user_id>')
+@login_required
+def buy_all(user_id):
+    db_sess = db_session.create_session()
+    basket_user = db_sess.query(Basket).filter(Basket.user_id == user_id).first()
+    list_product = basket_user.product_to_list()
+    for i in list_product:
+        basket_user.del_product(i)
+    db_sess.commit()
+    return basket(user_id)
 
 
 @app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
@@ -206,37 +273,34 @@ def edit_product(id):
     form = ProductForm()
     db_sess = db_session.create_session()
     categories = db_sess.query(Category)
+    category_flag = ''
     if request.method == "GET":
         product = db_sess.query(Product).filter(Product.id == id).first()
 
         if product:
             form.title.data = product.title
-
-            parent_dir = path.dirname(path.abspath(__file__))
-            basename = parent_dir + product.picture
-            f = open(basename, 'rb')
-            data = f.read()
-            form.picture.data = f
-            print(form.picture.data)
-
+            picture = product.picture
             form.description.data = product.description
-            category = db_sess.query(Category).filter(Category.id == product.category).first()
+            category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
+            category_flag = category_obj.title
             form.category.data = product.category
             form.producer.data = product.producer
             form.price.data = product.price
             form.count.data = product.count
             form.advantage.data = product.advantage
-            f.close()
         else:
             abort(404)
 
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         product = db_sess.query(Product).filter(Product.id == id).first()
+        category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
+        category_flag = category_obj.title
 
         if product and current_user.is_admin:
             product.title = form.title.data
-            # product.picture = form.picture.data
+            if form.picture.data:
+                product.picture = form.picture.data
             product.description = form.description.data
             product.category = form.category.data
             product.producer = form.producer.data
@@ -247,8 +311,9 @@ def edit_product(id):
             return redirect('/')
         else:
             abort(404)
-
-    return render_template('product.html', title='Редоктирование товара', form=form, categories=categories, category=category.title)
+    # если у товара есть категория, значит он редактируется
+    return render_template('product.html', title='Редоктирование товара', form=form, categories=categories,
+                           category=category_flag, picture=picture)
 
 
 @app.route('/delete_product/<int:id>', methods=['GET', 'POST'])

@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Товары</h1>
-<div class="btn-group">
-  <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    Категория товара
-  </button>
-  <div class="dropdown-menu">
-    <a class="dropdown-item" href="/">Все категории</a>
-    {% for item in categories%}
-        <a class="dropdown-item" href="/{{item.id}}">{{ item.title }}</a>
-    {% endfor %}
-  </div>
-</div>
+<h1 class="text-center">Корзина</h1>
 <table class="table table-bordered">
     <thead class="table-active">
         <tr>
@@ -20,7 +9,7 @@
             <th scope="col" colspan="6" class="w-75">Описание товара</th>
         </tr>
     </thead>
-    {% for item in products%}
+    {% for item in products_list%}
     <tbody>
         <tr>
             <td colspan="2"><img src={{item.picture}} width="300" height="300"></td>
@@ -34,24 +23,19 @@
                 <h6 class="list-group-item-heading">Цена:</h6>
                 <p class="list-group-item-text">{{item.price}}</p>
                 <h6 class="list-group-item-heading">Количество:</h6>
-                <p class="list-group-item-text">{{item.count}}</p>
+                <p class="list-group-item-text">1</p>
                 <h6 class="list-group-item-heading">Преимущества покупки товара:</h6>
                 <p class="list-group-item-text">{{item.advantage}}</p>
-                {% if item.count > 0 %}
-                    <a href="/add_to_basket/{{current_user.id}}/{{ item.id }}" class="btn btn-success">Добавить в корзину</a>
-                {% else %}
-                    <a href="/add_to_basket/{{current_user.id}}/{{ item.id }}" class="btn btn-success disabled" aria-disabled="true">Добавить в корзину</a>
-                {% endif %}
-                {% if null > -1%}
-                    <p>Товар отсутствует</p>
-                {% endif %}
+
+
                 {% if current_user.is_authenticated %}
-                    {% if current_user.is_admin %}
-                        <a href="/edit_product/{{ item.id }}" class="btn btn-warning">
-                            Редактировать
+                    {% if current_user.id == user_id %}
+                        <a href="/buy_product/{{current_user.id}}/{{ item.id }}" class="btn btn-success">
+                            Купить
                         </a>
-                        <a href="/delete_product/{{ item.id }}" class="btn btn-danger">
-                            Удалить
+
+                        <a href="/cancel_product/{{current_user.id}}/{{ item.id }}" class="btn btn-danger">
+                            Удалить из корзины
                         </a>
                     {% endif %}
                 {% endif %}
@@ -60,5 +44,17 @@
     </tbody>
     {% endfor %}
 </table>
-
+{% if current_user.is_authenticated %}
+    {% if current_user.id == user_id %}
+        {% if products_list[0] %}
+        <a href="/buy_all/{{current_user.id}}" class="btn btn-success">
+            Купить всё
+        </a>
+        {% else %}
+            <a href="/buy_all/{{current_user.id}}" class="btn btn-success disabled" aria-disabled="true">
+            Купить всё
+        </a>
+        {% endif %}
+    {% endif %}
+{% endif %}
 {% endblock %}
