@@ -1,0 +1,8 @@
+python 3.8
+Flask
+flask_login
+werkzeug
+datetime
+sqlalchemy
+flask_wtf
+wtforms

@@ -188,6 +188,8 @@ def add_product():
             product.picture = '/static/pictures/pic_' + suffix + '_.png'
 
         cat = db_sess.query(Category).filter(Category.title == form.category.data).first()
+        if not cat:
+            cat = db_sess.query(Category).filter(Category.id == form.category.data).first()
         product.category = cat.id
 
         db_sess.add(product)
@@ -273,7 +275,7 @@ def edit_product(id):
     form = ProductForm()
     db_sess = db_session.create_session()
     categories = db_sess.query(Category)
-    category_flag = ''
+    category_flag = 'None'
     if request.method == "GET":
         product = db_sess.query(Product).filter(Product.id == id).first()
 
@@ -281,7 +283,9 @@ def edit_product(id):
             form.title.data = product.title
             picture = product.picture
             form.description.data = product.description
-            category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
+            category_obj = db_sess.query(Category).filter(Category.title == product.category).first()
+            if not category_obj:
+                category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
             category_flag = category_obj.title
             form.category.data = product.category
             form.producer.data = product.producer
@@ -294,13 +298,26 @@ def edit_product(id):
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         product = db_sess.query(Product).filter(Product.id == id).first()
-        category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
+        category_obj = db_sess.query(Category).filter(Category.title == product.category).first()
+        if not category_obj:
+            category_obj = db_sess.query(Category).filter(Category.id == product.category).first()
         category_flag = category_obj.title
 
         if product and current_user.is_admin:
             product.title = form.title.data
+
             if form.picture.data:
-                product.picture = form.picture.data
+                # product.picture = form.picture.data
+                f = form.picture.data
+                parent_dir = path.dirname(path.abspath(__file__))
+                basename = parent_dir + '\\static\\pictures\\pic'
+                suffix = datetime.now().strftime("%y%m%d_%H%M%S")
+                filename = "_".join([basename, suffix, '.png'])
+                g = open(filename, 'wb')
+                g.write(f.getbuffer())
+                g.close()
+                product.picture = '/static/pictures/pic_' + suffix + '_.png'
+
             product.description = form.description.data
             product.category = form.category.data
             product.producer = form.producer.data
